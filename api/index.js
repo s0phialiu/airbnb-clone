@@ -5,9 +5,11 @@ const bcrypt = require('bcryptjs');
 const { default: mongoose } = require('mongoose');
 const User = require('./models/User.js'); // Manually importing our user model
 const { json } = require('express');
+const jwt = require('jsonwebtoken'); // Import json web token
 require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10); // Specifies this is an async function
+const jwtSec = 'fasefraw374673sjhdsjdhwfasfr'
 
 app.use(express.json());
 app.use(cors({
@@ -41,9 +43,17 @@ app.post('/register', async (req,res)=> { // Creare register endpoint
 app.post('/login', async (req,res) => { // Create login endpoint
     const {email,password} = req.body;
     // Want to find a user with this email
-    const userDoc = await User.findOne({email});
-    if (userDoc) {
-        res.json('Found');
+    const userDoc = await User.findOne({email}); // See if email entered is valid
+    if (userDoc) { // Check to make sure userDoc is not null 
+        const passOk = bcrypt.compareSync(password, userDoc.password); // Check password
+        if (passOk) {
+            jwt.sign({email:userDoc.email, id:userDoc._id}, jwtSec, {}, (err,token) => {
+                if (err) throw err;
+                res.cookie('token', token).json('Pass ok');
+            }); // Create JSON web token
+        } else {
+            res.status(422).json('Pass not ok');
+        }
     } else {
         res.json('Not found');
     }
