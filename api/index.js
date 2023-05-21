@@ -49,7 +49,7 @@ app.post('/login', async (req,res) => { // Create login endpoint
         if (passOk) {
             jwt.sign({email:userDoc.email, id:userDoc._id}, jwtSec, {}, (err,token) => {
                 if (err) throw err;
-                res.cookie('token', token).json('Pass ok');
+                res.cookie('token', token).json(userDoc);
             }); // Create JSON web token
         } else {
             res.status(422).json('Pass not ok');
