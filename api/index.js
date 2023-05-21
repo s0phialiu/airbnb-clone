@@ -6,12 +6,14 @@ const { default: mongoose } = require('mongoose');
 const User = require('./models/User.js'); // Manually importing our user model
 const { json } = require('express');
 const jwt = require('jsonwebtoken'); // Import json web token
+const cookieParser = require('cookie-parser');
 require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10); // Specifies this is an async function
 const jwtSec = 'fasefraw374673sjhdsjdhwfasfr'
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors({
     credentials: true,
     origin: 'http://localhost:5173',
@@ -58,4 +60,19 @@ app.post('/login', async (req,res) => { // Create login endpoint
         res.json('Not found');
     }
 });
+
+app.get('/profile', (req,res) => { // Profile endpoint
+    const {token} = req.cookies;
+    if (token) {
+        jwt.verify(token, jwtSec, {}, async (err, userData) => { // Descrypt w/ salt key
+            if (err) throw err;
+            const {name,email,_id} = await User.findById(userData.id); // Fetch info from user
+            // Only display the name, email, and id
+            res.json({name,email,_id});
+        });
+    } else {
+        res.json(null);
+    }
+});
+
 app.listen(4000);
