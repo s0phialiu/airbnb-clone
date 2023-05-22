@@ -75,4 +75,8 @@ app.get('/profile', (req,res) => { // Profile endpoint
     }
 });
 
+app.post('/logout', (req,res) => { // API logout endpoint
+    res.cookie('token','').json(true); // Reset cookie
+});
+
 app.listen(4000);
