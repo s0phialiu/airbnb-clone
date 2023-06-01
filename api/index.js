@@ -7,6 +7,7 @@ const User = require('./models/User.js'); // Manually importing our user model
 const { json } = require('express');
 const jwt = require('jsonwebtoken'); // Import json web token
 const cookieParser = require('cookie-parser');
+const imageDownloader = require('image-downloader');
 require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10); // Specifies this is an async function
@@ -77,6 +78,17 @@ app.get('/profile', (req,res) => { // Profile endpoint
 
 app.post('/logout', (req,res) => { // API logout endpoint
     res.cookie('token','').json(true); // Reset cookie
+});
+
+console.log(__dirname)
+app.post('/upload-by-link', async (req,res) => { // Endpoint to upload image
+    const {link} = req.body;    
+    const newName = 'photo' + Date.now() + '.jpg';
+    await imageDownloader.image({
+        url: link,
+        dest: __dirname + '/uploads' + newName,
+    });
+    res.json(newName);
 });
 
 app.listen(4000);
