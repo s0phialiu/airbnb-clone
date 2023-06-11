@@ -26,7 +26,6 @@ app.use(cors({
 
 // console.log(process.env.MONGO_URL) 
 mongoose.connect(process.env.MONGO_URL);
-// o0b610rqh6GCCM1T
 
 app.get('/test', (req,res) => {
     res.json('test ok');
@@ -124,10 +123,45 @@ app.post('/places', (req,res) => { // Posting new place endpoint
         if (err) throw err;
         const placeDoc = await Place.create({
             owner:userData.id, // Owner is just our user ID
-            title,address,addedPhotos,description,
+            title,address,photos:addedPhotos,description,
             perks,extraInfo,checkIn,checkOut,maxGuests,
         });
         res.json(placeDoc);
+    });
+});
+
+app.get('/places', (req,res) => {
+    const {token} = req.cookies; // Grab token
+    jwt.verify(token, jwtSec, {}, async (err, userData) => { // Decrypt token
+        const {id} = userData;
+        res.json( await Place.find({owner:id})); // Respond with all the places
+    });
+});
+
+app.get('/places/:id', async (req,res) => {
+    const {id} = req.params;
+    res.json(await Place.findById(id));
+});
+
+app.put('/places', async (req,res) => {
+    const {token} = req.cookies;
+    const {
+        id,title,address,addedPhotos,description,
+        perks,extraInfo,checkIn,checkOut,maxGuests,
+    } = req.body;
+    jwt.verify(token, jwtSec, {}, async (err, userData) => {
+        if (err) throw err;
+        const placeDoc = await Place.findById(id); // Fetch place
+        
+        if (userData.id === placeDoc.owner.toString()) {
+            // Then, we can update placeDoc
+            placeDoc.set({ // Don't want to update the owner
+                title,address,photos:addedPhotos,description,
+                perks,extraInfo,checkIn,checkOut,maxGuests,
+            });
+            await placeDoc.save();
+            res.json('Ok');
+        }
     });
 });
 

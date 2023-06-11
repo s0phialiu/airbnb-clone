@@ -4,8 +4,12 @@ import { useState } from "react";
 import AccountNav from "../AccountNav";
 import axios from "axios";
 import { Navigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function PlacesFormPage() {
+    const {id} = useParams();
+    console.log({id});
     const [title,setTitle] = useState('');
     const [address,setAddress] = useState('');
     const [addedPhotos,setAddedPhotos] = useState([]);
@@ -16,6 +20,23 @@ export default function PlacesFormPage() {
     const [checkOut,setCheckOut] = useState('');
     const [maxGuests,setMaxGuests] = useState(1);
     const [redirect,setRedirect] = useState(false);
+    useEffect(() => {
+        if (!id) {
+            return;
+        }
+        axios.get('/places/'+id).then(response => {
+            const {data} = response;
+            setTitle(data.title);
+            setAddress(data.address);
+            setAddedPhotos(data.photos);
+            setDescription(data.description);
+            setPerks(data.perks);
+            setExtraInfo(data.extraInfo);
+            setCheckIn(data.checkIn);
+            setCheckOut(data.checkOut);
+            setMaxGuests(data.maxGuests);
+        });
+    }, [id]);
 
     function inputHeader(text) {
         return (
@@ -35,14 +56,22 @@ export default function PlacesFormPage() {
             </>
         );
     }
-    async function addNewPlace(ev) {
-        ev.preventDefault(); // Don't want default form submission
-        await axios.post('/places', {  // Send post request to /places
-            title, address, addedPhotos, 
+    async function savePlace(ev) { // Function can add and edit places
+        ev.preventDefault(); // Don't want default behavior on form submission
+        const placeData = {title, address, addedPhotos, 
             description, perks, extraInfo, 
-            checkIn, checkOut, maxGuests
-        });
-        setRedirect(true);
+            checkIn, checkOut, maxGuests};
+        if (id) {
+            // It's an update
+            await axios.put('/places', {  // Send put request to /places
+                id, ...placeData
+            });
+            setRedirect(true);
+        } else {
+            // It's a new place
+            await axios.post('/places', placeData);  // Send post request to /places
+            setRedirect(true);
+        }
     }
     if (redirect) {
         return <Navigate to={'/account/places'} />
@@ -50,7 +79,7 @@ export default function PlacesFormPage() {
     return (
         <div>
             <AccountNav />
-            <form onSubmit={addNewPlace}>
+            <form onSubmit={savePlace}>
                 {preInput('Title','Title, for example: My lovely apt')}
                 <input type="text" value={title} onChange={ev => setTitle(ev.target.value)} placeholder="Title, for example: My lovely apt"/>
                 {preInput('Address','Address to this place')}
