@@ -13,7 +13,7 @@ export default function PhotosUploader({addedPhotos,onChange}) {
         // Reset state
         setPhotoLink('');
     }
-    function uploadPhoto(ev) {
+    function uploadPhoto(ev) { // Uploader component
         const files = ev.target.files;
         const data = new FormData();
         for (let i = 0; i < files.length; i++) {

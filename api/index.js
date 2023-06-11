@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser');
 const imageDownloader = require('image-downloader');
 const multer = require('multer');
 const fs = require('fs');
+const Place = require('./models/Place.js');
 require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10); // Specifies this is an async function
@@ -110,6 +111,24 @@ app.post('/upload', photosMiddleware.array('photos', 100), (req,res) => { // Max
         uploadedFiles.push(newPath.replace('uploads/',''));
     }
     res.json(uploadedFiles);
+});
+
+app.post('/places', (req,res) => { // Posting new place endpoint
+    // Fill properties, create new model, send to database
+    const {token} = req.cookies;
+    const {
+        title,address,addedPhotos,description,perks,
+        extraInfo,checkIn,checkOut,maxGuests
+    } = req.body;
+    jwt.verify(token, jwtSec, {}, async (err, userData) => { 
+        if (err) throw err;
+        const placeDoc = await Place.create({
+            owner:userData.id, // Owner is just our user ID
+            title,address,addedPhotos,description,
+            perks,extraInfo,checkIn,checkOut,maxGuests,
+        });
+        res.json(placeDoc);
+    });
 });
 
 app.listen(4000);
