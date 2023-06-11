@@ -1,2 +1,2 @@
 # airbnb-clone
-Building basic features and UI of the airbnb website for practice.
+Building the basic features and user interface of the Airbnb website using MongoDB, React, Express, and Node.js.
