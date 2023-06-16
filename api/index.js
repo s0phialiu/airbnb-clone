@@ -117,20 +117,20 @@ app.post('/places', (req,res) => { // Posting new place endpoint
     const {token} = req.cookies;
     const {
         title,address,addedPhotos,description,perks,
-        extraInfo,checkIn,checkOut,maxGuests
+        extraInfo,checkIn,checkOut,maxGuests,price,
     } = req.body;
     jwt.verify(token, jwtSec, {}, async (err, userData) => { 
         if (err) throw err;
         const placeDoc = await Place.create({
             owner:userData.id, // Owner is just our user ID
             title,address,photos:addedPhotos,description,
-            perks,extraInfo,checkIn,checkOut,maxGuests,
+            perks,extraInfo,checkIn,checkOut,maxGuests,price,
         });
         res.json(placeDoc);
     });
 });
 
-app.get('/places', (req,res) => {
+app.get('/places', (req,res) => { // Gets place based on unique user token
     const {token} = req.cookies; // Grab token
     jwt.verify(token, jwtSec, {}, async (err, userData) => { // Decrypt token
         const {id} = userData;
@@ -147,7 +147,7 @@ app.put('/places', async (req,res) => {
     const {token} = req.cookies;
     const {
         id,title,address,addedPhotos,description,
-        perks,extraInfo,checkIn,checkOut,maxGuests,
+        perks,extraInfo,checkIn,checkOut,maxGuests,price,
     } = req.body;
     jwt.verify(token, jwtSec, {}, async (err, userData) => {
         if (err) throw err;
@@ -157,12 +157,16 @@ app.put('/places', async (req,res) => {
             // Then, we can update placeDoc
             placeDoc.set({ // Don't want to update the owner
                 title,address,photos:addedPhotos,description,
-                perks,extraInfo,checkIn,checkOut,maxGuests,
+                perks,extraInfo,checkIn,checkOut,maxGuests,price,
             });
             await placeDoc.save();
             res.json('Ok');
         }
     });
 });
+
+app.get('/all-places', async (req,res) => {
+    res.json( await Place.find() );
+})
 
 app.listen(4000);
