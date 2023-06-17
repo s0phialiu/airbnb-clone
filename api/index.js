@@ -11,6 +11,7 @@ const imageDownloader = require('image-downloader');
 const multer = require('multer');
 const fs = require('fs');
 const Place = require('./models/Place.js');
+const Booking = require('./models/Booking.js')
 require('dotenv').config()
 
 const bcryptSalt = bcrypt.genSaltSync(10); // Specifies this is an async function
@@ -26,6 +27,15 @@ app.use(cors({
 
 // console.log(process.env.MONGO_URL) 
 mongoose.connect(process.env.MONGO_URL);
+
+function getUserDataFromReq(req) {
+    return new Promise((resolve, reject) => {
+        jwt.verify(req.cookies.token, jwtSec, {}, async (err, userData) => {
+            if (err) throw err;
+            resolve(userData); // Return user data
+        });
+    });
+}
 
 app.get('/test', (req,res) => {
     res.json('test ok');
@@ -167,6 +177,27 @@ app.put('/places', async (req,res) => {
 
 app.get('/all-places', async (req,res) => {
     res.json( await Place.find() );
+});
+
+app.post('/bookings', async (req, res) => {
+    const userData = await getUserDataFromReq(req);
+    const {place,checkIn,checkOut,numberOfGuests,name,phone,price,} = req.body;
+    Booking.create({
+        place,checkIn,checkOut,numberOfGuests,name,phone,price,
+        user:userData.id,
+    }).then((doc) => {
+        res.json(doc);
+    }).catch((err) => {
+        throw err;
+    });
+});
+
+// Endpoint to get all bookings
+app.get('/bookings', async (req,res) => {
+    // Bookings are private, grab token first
+    const userData = await getUserDataFromReq(req); // Await the promise
+    res.json( await Booking.find({user:userData.id}).populate('place') );
 })
+
 
 app.listen(4000);
